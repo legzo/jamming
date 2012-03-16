@@ -4,6 +4,9 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Date;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.ObjectWriter;
+import org.codehaus.jackson.util.DefaultPrettyPrinter;
 import org.elitefactory.jamming.model.RocadePoint;
 import org.elitefactory.jamming.model.TrafficState;
 import org.elitefactory.jamming.model.TrafficStatus;
@@ -13,6 +16,7 @@ import org.slf4j.LoggerFactory;
 public class ImageAnalyzer {
 
 	private static Logger logger = LoggerFactory.getLogger(ImageAnalyzer.class);
+	private static ObjectMapper mapper = new ObjectMapper();
 
 	public static TrafficStatus getStatusFromPixel(BufferedImage image, int x, int y) {
 		int pixel = image.getRGB(x, y);
@@ -47,6 +51,11 @@ public class ImageAnalyzer {
 
 	public TrafficState getCurrentState() throws IOException {
 		return getCurrentStateFromImage(ImageGetter.getCurrentBisonImage());
+	}
+
+	public String getCurrentStateAsJSON() throws IOException {
+		ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
+		return writer.writeValueAsString(getCurrentState());
 	}
 
 }

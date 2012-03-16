@@ -11,6 +11,7 @@ import javax.imageio.ImageIO;
 import junit.framework.Assert;
 
 import org.apache.commons.lang.time.DateUtils;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.elitefactory.jamming.model.TrafficHistory;
 import org.elitefactory.jamming.model.TrafficState;
 import org.elitefactory.jamming.model.TrafficStatus;
@@ -70,7 +71,7 @@ public class ImageAnalyzerTest {
 
 		Assert.assertNotNull(currentState);
 		Assert.assertEquals(31, currentState.getState().values().size());
-		logger.debug("{}", currentState);
+		logger.debug("{}", analyzer.getCurrentStateAsJSON());
 	}
 
 	@Test
@@ -101,6 +102,9 @@ public class ImageAnalyzerTest {
 		}
 		logger.info("{} files treated in {}ms", history.getNumberOfSamples(), new Date().getTime() - start.getTime());
 		logger.info("Max was : {}", history.getMax());
+
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.writeValue(new File("target/history.json"), history);
 		Assert.assertEquals(156, history.getNumberOfSamples());
 	}
 }

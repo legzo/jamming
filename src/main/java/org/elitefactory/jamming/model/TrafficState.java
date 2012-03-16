@@ -12,6 +12,12 @@ public class TrafficState {
 
 	private Map<RocadePoint, TrafficStatus> state = new TreeMap<RocadePoint, TrafficStatus>();
 
+	/**
+	 * for json
+	 */
+	public TrafficState() {
+	}
+
 	public TrafficState(Date time) {
 		super();
 		this.time = time;
@@ -33,13 +39,17 @@ public class TrafficState {
 		return state;
 	}
 
+	public void setState(Map<RocadePoint, TrafficStatus> state) {
+		this.state = state;
+	}
+
 	@Override
 	public String toString() {
 		return "TrafficState [time=" + time + ", summary=" + getStateAsFormattedFloat() + ", state="
 				+ getStateAsString() + "]";
 	}
 
-	private String getStateAsString() {
+	public String getStateAsString() {
 		StringBuffer sb = new StringBuffer();
 		for (TrafficStatus aState : state.values()) {
 			sb.append(aState.getDigit());
@@ -74,5 +84,17 @@ public class TrafficState {
 		}
 
 		return twoDecimalFormatter.format(total / numberOfSamples);
+	}
+
+	public void setStateAsFloat(float f) {
+
+	}
+
+	public void setStateAsFormattedFloat(String s) {
+
+	}
+
+	public void setStateAsString(String s) {
+
 	}
 }

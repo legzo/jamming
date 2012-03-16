@@ -30,4 +30,18 @@ public class TrafficHistory {
 		return max;
 	}
 
+	public Map<Date, TrafficState> getStates() {
+		return states;
+	}
+
+	public void setStates(Map<Date, TrafficState> states) {
+		this.states = states;
+	}
+
+	public void setNumberOfSamples(int i) {
+	}
+
+	public void setMax(TrafficState max) {
+	}
+
 }
