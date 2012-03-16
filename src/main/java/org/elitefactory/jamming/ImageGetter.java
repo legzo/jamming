@@ -20,7 +20,7 @@ public class ImageGetter {
 	private static final String BISON_URL = "http://www.bison-fute.equipement.gouv.fr/asteccli/servlet/clientleger?format=png&source0=cigt_alienor&source1=cir&raster=bordeaux";
 	private static final Logger logger = LoggerFactory.getLogger(ImageGetter.class);
 
-	public static BufferedImage getImage() throws IOException {
+	public static BufferedImage getCurrentBisonImage() throws IOException {
 
 		HttpClient client = new DefaultHttpClient();
 		HttpGet httpget = new HttpGet(BISON_URL);
@@ -30,11 +30,11 @@ public class ImageGetter {
 		return image;
 	}
 
-	public static void getImages() throws IOException, InterruptedException {
+	public static void fetchBisonImages() throws IOException, InterruptedException {
 		BufferedImage image = null;
 
 		for (int i = 0; i < 60 * 2; i++) {
-			image = getImage();
+			image = getCurrentBisonImage();
 			File file = new File(String.format(IMAGES_FOLDER + "/bison-%1$tm-%1$td-%1$tk_%1$tM.png", new Date()));
 
 			logger.debug("saving file {}", file.getAbsolutePath());

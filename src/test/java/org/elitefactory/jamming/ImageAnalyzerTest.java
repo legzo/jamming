@@ -3,12 +3,17 @@ package org.elitefactory.jamming;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.imageio.ImageIO;
 
 import junit.framework.Assert;
 
+import org.apache.commons.lang.time.DateUtils;
+import org.elitefactory.jamming.model.TrafficHistory;
+import org.elitefactory.jamming.model.TrafficState;
+import org.elitefactory.jamming.model.TrafficStatus;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,34 +58,49 @@ public class ImageAnalyzerTest {
 		logger.debug("R" + red + ", G" + green + ", B" + blue);
 	}
 
-	@Test
+	// @Test
 	public void testGetImages() throws Exception {
-		ImageGetter.getImages();
+		ImageGetter.fetchBisonImages();
+	}
+
+	@Test
+	public void shouldReturnCurrentState() throws Exception {
+		ImageAnalyzer analyzer = new ImageAnalyzer();
+		TrafficState currentState = analyzer.getCurrentState();
+
+		Assert.assertNotNull(currentState);
+		Assert.assertEquals(31, currentState.getState().values().size());
+		logger.debug("{}", currentState);
 	}
 
 	@Test
 	public void testAnalyseImage() throws Exception {
+		ImageAnalyzer analyzer = new ImageAnalyzer();
+		TrafficHistory history = new TrafficHistory();
+
 		File imagesFolder = new File("target/images");
 
 		String[] imageFiles = imagesFolder.list();
 		Date start = new Date();
-		int numberOfTreatedFiles = 0;
 		for (String imageFilePath : imageFiles) {
 			if (imageFilePath.endsWith(".png")) {
-				// logger.debug("For file {}", imageFilePath);
-
-				numberOfTreatedFiles++;
 
 				BufferedImage image = ImageIO.read(new File(imagesFolder, imageFilePath));
+				SimpleDateFormat sdf = new SimpleDateFormat("'bison'-MM-dd-HH_mm'.png'");
+				Date parsedDate = sdf.parse(imageFilePath);
 
-				for (RocadePoints rocadePoint : RocadePoints.values()) {
-					TrafficStatus statusFromPixel = ImageAnalyzer.getStatusFromPixel(image, rocadePoint.x,
-							rocadePoint.y);
-					// logger.debug("{}:{}", rocadePoint.name(), statusFromPixel.name());
-				}
+				parsedDate = DateUtils.setYears(parsedDate, 2012);
+
+				TrafficState currentState = analyzer.getCurrentStateFromImage(image);
+				currentState.setTime(parsedDate);
+
+				history.putState(currentState);
+
+				logger.debug("{}", currentState);
 			}
 		}
-		logger.info("{} files treated in {}ms", numberOfTreatedFiles, new Date().getTime() - start.getTime());
-
+		logger.info("{} files treated in {}ms", history.getNumberOfSamples(), new Date().getTime() - start.getTime());
+		logger.info("Max was : {}", history.getMax());
+		Assert.assertEquals(156, history.getNumberOfSamples());
 	}
 }

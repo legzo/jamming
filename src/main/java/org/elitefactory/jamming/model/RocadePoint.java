@@ -1,6 +1,6 @@
-package org.elitefactory.jamming;
+package org.elitefactory.jamming.model;
 
-public enum RocadePoints {
+public enum RocadePoint {
 
 	P01(213, 343), P02(221, 341), P03(229, 341), P04(237, 342), P05(245, 344), P06(253, 346), P07(261, 350), P08(269,
 			355), P09(277, 360), P10(285, 364), P11(293, 366), P12(301, 370), P13(309, 372), P14(317, 374), P15(325,
@@ -11,7 +11,7 @@ public enum RocadePoints {
 	public int x;
 	public int y;
 
-	private RocadePoints(int x, int y) {
+	private RocadePoint(int x, int y) {
 		this.x = x;
 		this.y = y;
 	}
