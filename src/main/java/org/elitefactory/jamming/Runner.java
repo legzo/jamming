@@ -34,7 +34,7 @@ public class Runner {
 
 				history.putState(currentState);
 				if (i % BATCH_SIZE == 0) {
-					logger.debug("writing {} samples to file", BATCH_SIZE);
+					// logger.debug("writing {} samples to file", BATCH_SIZE);
 					mapper.writeValue(historyFile, history);
 				}
 				Thread.sleep(1000 * 60);

@@ -74,7 +74,7 @@ public class ImageAnalyzerTest {
 		logger.debug("{}", analyzer.getCurrentStateAsJSON());
 	}
 
-	@Test
+	// @Test
 	public void testAnalyseImage() throws Exception {
 		ImageAnalyzer analyzer = new ImageAnalyzer();
 		TrafficHistory history = new TrafficHistory();

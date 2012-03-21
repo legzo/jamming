@@ -4,6 +4,10 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Date;
 
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectWriter;
 import org.codehaus.jackson.util.DefaultPrettyPrinter;
@@ -13,6 +17,7 @@ import org.elitefactory.jamming.model.TrafficStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Path("/traffic")
 public class ImageAnalyzer {
 
 	private static Logger logger = LoggerFactory.getLogger(ImageAnalyzer.class);
@@ -53,6 +58,8 @@ public class ImageAnalyzer {
 		return getCurrentStateFromImage(ImageGetter.getCurrentBisonImage());
 	}
 
+	@GET
+	@Produces("application/json")
 	public String getCurrentStateAsJSON() throws IOException {
 		ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
 		return writer.writeValueAsString(getCurrentState());
