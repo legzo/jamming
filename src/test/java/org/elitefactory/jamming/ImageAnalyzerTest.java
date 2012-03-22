@@ -61,7 +61,7 @@ public class ImageAnalyzerTest {
 
 	// @Test
 	public void testGetImages() throws Exception {
-		ImageGetter.fetchBisonImages();
+		WebConnector.fetchBisonImages();
 	}
 
 	@Test

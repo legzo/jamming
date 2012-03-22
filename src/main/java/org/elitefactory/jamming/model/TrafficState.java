@@ -31,6 +31,10 @@ public class TrafficState {
 		return time;
 	}
 
+	public String getFormattedTime() {
+		return String.format("%1$tm-%1$td-%1$tk_%1$tM", time);
+	}
+
 	public void setTime(Date time) {
 		this.time = time;
 	}
@@ -86,6 +90,8 @@ public class TrafficState {
 		return twoDecimalFormatter.format(total / numberOfSamples);
 	}
 
+	// for JSON
+
 	public void setStateAsFloat(float f) {
 
 	}
@@ -95,6 +101,10 @@ public class TrafficState {
 	}
 
 	public void setStateAsString(String s) {
+
+	}
+
+	public void setFormattedTime(String time) {
 
 	}
 }
