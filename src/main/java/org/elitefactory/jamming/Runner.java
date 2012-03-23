@@ -15,7 +15,7 @@ public class Runner {
 
 	private static final int BATCH_SIZE = 2;
 
-	private static ImageAnalyzer imageAnalyzer = new ImageAnalyzer();
+	private static Analyzer imageAnalyzer = new Analyzer();
 	private static ObjectMapper mapper = new ObjectMapper();
 
 	public static void main(String[] args) {

@@ -30,11 +30,11 @@ public class ImageAnalyzerTest {
 	public void shouldReadPixelColorsCorrectly() throws Exception {
 		BufferedImage image = getImage();
 
-		Assert.assertEquals(TrafficStatus.unknown, ImageAnalyzer.getStatusFromPixel(image, 0, 0));
-		Assert.assertEquals(TrafficStatus.normal, ImageAnalyzer.getStatusFromPixel(image, 105, 213));
-		Assert.assertEquals(TrafficStatus.slow, ImageAnalyzer.getStatusFromPixel(image, 110, 192));
-		Assert.assertEquals(TrafficStatus.slow, ImageAnalyzer.getStatusFromPixel(image, 146, 309));
-		Assert.assertEquals(TrafficStatus.stopped, ImageAnalyzer.getStatusFromPixel(image, 121, 173));
+		Assert.assertEquals(TrafficStatus.unknown, Analyzer.getStatusFromPixel(image, 0, 0));
+		Assert.assertEquals(TrafficStatus.normal, Analyzer.getStatusFromPixel(image, 105, 213));
+		Assert.assertEquals(TrafficStatus.slow, Analyzer.getStatusFromPixel(image, 110, 192));
+		Assert.assertEquals(TrafficStatus.slow, Analyzer.getStatusFromPixel(image, 146, 309));
+		Assert.assertEquals(TrafficStatus.stopped, Analyzer.getStatusFromPixel(image, 121, 173));
 	}
 
 	private BufferedImage getImage() throws IOException {
@@ -66,7 +66,7 @@ public class ImageAnalyzerTest {
 
 	@Test
 	public void shouldReturnCurrentState() throws Exception {
-		ImageAnalyzer analyzer = new ImageAnalyzer();
+		Analyzer analyzer = new Analyzer();
 		TrafficState currentState = analyzer.getCurrentState();
 
 		Assert.assertNotNull(currentState);
@@ -76,7 +76,7 @@ public class ImageAnalyzerTest {
 
 	// @Test
 	public void testAnalyseImage() throws Exception {
-		ImageAnalyzer analyzer = new ImageAnalyzer();
+		Analyzer analyzer = new Analyzer();
 		TrafficHistory history = new TrafficHistory();
 
 		File imagesFolder = new File("target/images");

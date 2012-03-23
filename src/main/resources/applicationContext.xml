@@ -19,5 +19,5 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
     </jaxrs:serviceBeans>
   </jaxrs:server>
 
-  <bean id="analyzer" class="org.elitefactory.jamming.ImageAnalyzer" />
+  <bean id="analyzer" class="org.elitefactory.jamming.Analyzer" />
 </beans>
