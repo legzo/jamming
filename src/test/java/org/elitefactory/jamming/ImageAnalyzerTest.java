@@ -12,6 +12,8 @@ import junit.framework.Assert;
 
 import org.apache.commons.lang.time.DateUtils;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.util.DefaultPrettyPrinter;
+import org.elitefactory.jamming.model.RocadeDirection;
 import org.elitefactory.jamming.model.TrafficHistory;
 import org.elitefactory.jamming.model.TrafficState;
 import org.elitefactory.jamming.model.TrafficStatus;
@@ -42,36 +44,26 @@ public class ImageAnalyzerTest {
 		return image;
 	}
 
-	public void printPixels() throws IOException {
-		BufferedImage image = getImage();
-
-		printPixelARGB(image.getRGB(0, 0));
-		printPixelARGB(image.getRGB(105, 213)); // Green
-		printPixelARGB(image.getRGB(110, 192)); // Orange
-		printPixelARGB(image.getRGB(146, 309)); // Orange
-		printPixelARGB(image.getRGB(121, 173)); // Red
-	}
-
-	public void printPixelARGB(int pixel) {
-		int red = (pixel >> 16) & 0xff;
-		int green = (pixel >> 8) & 0xff;
-		int blue = (pixel) & 0xff;
-		logger.debug("R" + red + ", G" + green + ", B" + blue);
-	}
-
 	// @Test
-	public void testGetImages() throws Exception {
-		WebConnector.fetchBisonImages();
+	public void shouldDisplayHistoryAsString() throws Exception {
+		// File historyFile = new File("src/test/resources/bison-03-23-17_00_00.json");
+		File historyFile = new File("src/test/resources/bison-03-23-18_00_00_custom.json");
+		logger.debug("history loaded");
+		ObjectMapper mapper = new ObjectMapper();
+
+		TrafficHistory history = mapper.readValue(historyFile, TrafficHistory.class);
+		System.out.println(mapper.writer(new DefaultPrettyPrinter()).writeValueAsString(history.getHistoryAsString()));
+		System.out.println(history.getHistorySummaryAsString());
 	}
 
 	@Test
 	public void shouldReturnCurrentState() throws Exception {
 		Analyzer analyzer = new Analyzer();
-		TrafficState currentState = analyzer.getCurrentState();
+		TrafficState currentState = analyzer.getCurrentState(RocadeDirection.outer);
 
 		Assert.assertNotNull(currentState);
 		Assert.assertEquals(31, currentState.getState().values().size());
-		logger.debug("{}", analyzer.getCurrentStateAsJSON());
+		logger.debug("{}", analyzer.getCurrentStateAsJSON(RocadeDirection.outer));
 	}
 
 	// @Test
@@ -92,7 +84,7 @@ public class ImageAnalyzerTest {
 
 				parsedDate = DateUtils.setYears(parsedDate, 2012);
 
-				TrafficState currentState = analyzer.getCurrentStateFromImage(image);
+				TrafficState currentState = analyzer.getCurrentStateFromImage(image, RocadeDirection.outer);
 				currentState.setTime(parsedDate);
 
 				history.putState(currentState);

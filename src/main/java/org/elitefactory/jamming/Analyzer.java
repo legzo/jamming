@@ -10,11 +10,13 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectWriter;
 import org.codehaus.jackson.util.DefaultPrettyPrinter;
+import org.elitefactory.jamming.model.RocadeDirection;
 import org.elitefactory.jamming.model.RocadePoint;
 import org.elitefactory.jamming.model.TrafficHistory;
 import org.elitefactory.jamming.model.TrafficState;
@@ -27,14 +29,31 @@ import org.springframework.scheduling.support.CronTrigger;
 @Path("/traffic")
 public class Analyzer {
 
-	private static final String PING_CRON_EXPRESSION = "0 0/10 * * * MON-FRI";
-	private static final String GET_TRAFFIC_CRON_EXPRESSION = "0 1/1 16,17,18,19 * * MON-FRI";
-	private static final String UPLOAD_DATA_CRON_EXPRESSION = "0 0 7,8,9,16,17,18,19 * * MON-FRI";
+	/**
+	 * Pinging heroku app every ten minutes, night and day, everyday
+	 */
+	private static final String PING_CRON_EXPRESSION = "0 0/10 * * * *";
 
+	/**
+	 * Getting traffic info every minute (at 0 seconds) from 07h00'00 to 09h59'00
+	 */
+	private static final String GET_INNER_TRAFFIC_CRON_EXPRESSION = "0 0/1 7,8,9 * * MON-FRI";
+	/**
+	 * Getting traffic info every minute (at 0 seconds) from 17h00'00 to 19h59'00
+	 */
+	private static final String GET_OUTER_TRAFFIC_CRON_EXPRESSION = "0 0/1 17,18,19 * * MON-FRI";
+	/**
+	 * Uploading @ 20h59'59" every week day
+	 */
+	private static final String UPLOAD_DATA_CRON_EXPRESSION = "59 59 9,19 * * MON-FRI";
+
+	/**
+	 * for quick debug
+	 */
 	// private static final String GET_TRAFFIC_CRON_EXPRESSION = "0/5 * * * * MON-FRI";
 	// private static final String UPLOAD_DATA_CRON_EXPRESSION = "30/30 * * * * MON-FRI";
 
-	private static final String APPLICATION_URL = "http://freezing-winter-8090.herokuapp.com/rest/traffic";
+	private static final String APPLICATION_URL = "http://freezing-winter-8090.herokuapp.com/rest/traffic/config";
 	private static ObjectMapper mapper = new ObjectMapper();
 	private TrafficHistory history = new TrafficHistory();
 
@@ -47,11 +66,18 @@ public class Analyzer {
 
 		scheduler.initialize();
 
-		Runnable getTrafficTask = new Runnable() {
+		Runnable getOuterTrafficTask = new Runnable() {
 			@Override
 			public void run() {
-				logger.info("Triggering getTrafficTask");
-				history.putState(getCurrentState());
+				logger.info("Triggering getOuterTrafficTask");
+				history.putState(getCurrentState(RocadeDirection.outer));
+			}
+		};
+		Runnable getInnerTrafficTask = new Runnable() {
+			@Override
+			public void run() {
+				logger.info("Triggering getInnerTrafficTask");
+				history.putState(getCurrentState(RocadeDirection.inner));
 			}
 		};
 
@@ -72,8 +98,59 @@ public class Analyzer {
 		};
 
 		scheduler.schedule(pingTask, new CronTrigger(PING_CRON_EXPRESSION));
-		scheduler.schedule(getTrafficTask, new CronTrigger(GET_TRAFFIC_CRON_EXPRESSION));
+		scheduler.schedule(getInnerTrafficTask, new CronTrigger(GET_INNER_TRAFFIC_CRON_EXPRESSION));
+		scheduler.schedule(getOuterTrafficTask, new CronTrigger(GET_OUTER_TRAFFIC_CRON_EXPRESSION));
 		scheduler.schedule(uploadTask, new CronTrigger(UPLOAD_DATA_CRON_EXPRESSION));
+	}
+
+	@GET
+	@Path("/current/{direction}")
+	@Produces("application/json")
+	public String getCurrentStateAsJSON(@PathParam("direction") RocadeDirection direction) {
+		try {
+			ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
+			return writer.writeValueAsString(getCurrentState(direction));
+		} catch (IOException e) {
+			logger.error("Exception occured while trying to get state from Bison", e);
+		}
+		return "Err";
+	}
+
+	@GET
+	@Path("/config")
+	@Produces("application/json")
+	public String getCronsConfig() {
+		try {
+			Map<String, String> configMap = new HashMap<String, String>();
+			configMap.put("PING_CRON_EXPRESSION", PING_CRON_EXPRESSION);
+			configMap.put("GET_INNER_TRAFFIC_CRON_EXPRESSION", GET_INNER_TRAFFIC_CRON_EXPRESSION);
+			configMap.put("GET_OUTER_TRAFFIC_CRON_EXPRESSION", GET_OUTER_TRAFFIC_CRON_EXPRESSION);
+			configMap.put("UPLOAD_DATA_CRON_EXPRESSION", UPLOAD_DATA_CRON_EXPRESSION);
+
+			ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
+			return writer.writeValueAsString(configMap);
+		} catch (IOException e) {
+			logger.error("Exception occured while trying to get state from Bison", e);
+		}
+		return "Err";
+	}
+
+	@GET
+	@Path("/history")
+	@Produces("application/json")
+	public String getHistory() {
+		try {
+			if (history != null && history.getStates().size() > 0) {
+				ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
+				return writer.writeValueAsString(history);
+			} else {
+				return "History is empty";
+			}
+
+		} catch (IOException e) {
+			logger.error("Exception occured while trying to get state from Bison", e);
+		}
+		return "Err";
 	}
 
 	private void uploadHistory() {
@@ -109,9 +186,9 @@ public class Analyzer {
 		}
 	}
 
-	public TrafficState getCurrentStateFromImage(BufferedImage image) {
+	public TrafficState getCurrentStateFromImage(BufferedImage image, RocadeDirection direction) {
 		TrafficState trafficState = new TrafficState(new Date());
-		for (RocadePoint rocadePoint : RocadePoint.values()) {
+		for (RocadePoint rocadePoint : RocadePoint.getPointsForDirection(direction)) {
 			TrafficStatus statusFromPixel = Analyzer.getStatusFromPixel(image, rocadePoint.x, rocadePoint.y);
 			logger.trace("{}:{}", rocadePoint.name(), statusFromPixel.name());
 
@@ -120,50 +197,7 @@ public class Analyzer {
 		return trafficState;
 	}
 
-	public TrafficState getCurrentState() {
-		return getCurrentStateFromImage(WebConnector.getCurrentBisonImage());
-	}
-
-	@GET
-	@Produces("application/json")
-	public String getCurrentStateAsJSON() {
-		try {
-			ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
-			return writer.writeValueAsString(getCurrentState());
-		} catch (IOException e) {
-			logger.error("Exception occured while trying to get state from Bison", e);
-		}
-		return "Err";
-	}
-
-	@GET
-	@Path("/config")
-	@Produces("application/json")
-	public String getCronsConfig() {
-		try {
-			Map<String, String> configMap = new HashMap<String, String>();
-			configMap.put("PING_CRON_EXPRESSION", PING_CRON_EXPRESSION);
-			configMap.put("GET_TRAFFIC_CRON_EXPRESSION", GET_TRAFFIC_CRON_EXPRESSION);
-			configMap.put("UPLOAD_DATA_CRON_EXPRESSION", UPLOAD_DATA_CRON_EXPRESSION);
-
-			ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
-			return writer.writeValueAsString(configMap);
-		} catch (IOException e) {
-			logger.error("Exception occured while trying to get state from Bison", e);
-		}
-		return "Err";
-	}
-
-	@GET
-	@Path("/history")
-	@Produces("application/json")
-	public String getHistory() {
-		try {
-			ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
-			return writer.writeValueAsString(history);
-		} catch (IOException e) {
-			logger.error("Exception occured while trying to get state from Bison", e);
-		}
-		return "Err";
+	public TrafficState getCurrentState(RocadeDirection direction) {
+		return getCurrentStateFromImage(WebConnector.getCurrentBisonImage(), direction);
 	}
 }

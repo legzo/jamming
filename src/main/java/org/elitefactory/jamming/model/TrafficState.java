@@ -49,7 +49,7 @@ public class TrafficState {
 
 	@Override
 	public String toString() {
-		return "TrafficState [time=" + time + ", summary=" + getStateAsFormattedFloat() + ", state="
+		return "TraffsicState [time=" + time + ", summary=" + getStateAsFormattedFloat() + ", state="
 				+ getStateAsString() + "]";
 	}
 
@@ -60,6 +60,27 @@ public class TrafficState {
 		}
 
 		return sb.toString();
+	}
+
+	public String getStateSummaryAsString() {
+		String result = "@";
+
+		float stateAsFloat = getStateAsFloat();
+
+		if (stateAsFloat < 0.6f) {
+			result = "O";
+		}
+		if (stateAsFloat < 0.4f) {
+			result = "o";
+		}
+		if (stateAsFloat < 0.2f) {
+			result = "=";
+		}
+		if (stateAsFloat < 0.1f) {
+			result = "-";
+		}
+
+		return result;
 	}
 
 	public float getStateAsFloat() {
@@ -101,6 +122,10 @@ public class TrafficState {
 	}
 
 	public void setStateAsString(String s) {
+
+	}
+
+	public void setStateSummaryAsString(String s) {
 
 	}
 
