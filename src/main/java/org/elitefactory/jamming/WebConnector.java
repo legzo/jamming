@@ -50,34 +50,26 @@ public class WebConnector {
 	 * Not threadsafe
 	 * 
 	 * @return
+	 * @throws IOException
 	 */
-	public static OutputStream getFTPOutputStream(String filename) {
-		try {
-			ftpClient.connect("ftpperso.free.fr");
-			ftpClient.login("tetarot", "kem6mool");
-			logger.debug("XXX connect {}", ftpClient.getReplyString());
+	public static OutputStream getFTPOutputStream(String filename) throws IOException {
+		ftpClient.connect("ftpperso.free.fr");
+		ftpClient.login("tetarot", "kem6mool");
+		logger.debug("XXX connect {}", ftpClient.getReplyString());
 
-			ftpClient.enterLocalPassiveMode();
+		ftpClient.enterLocalPassiveMode();
 
-			OutputStream outputStream = ftpClient.storeFileStream(filename);
-			logger.debug("XXX store {}", ftpClient.getReplyString());
-			if (outputStream == null) {
-				logger.error("FTP outputStream is empty!!");
-			}
-
-			return outputStream;
-		} catch (IOException e) {
-			logger.error("Exception occured while getting FTP outputStream", e);
+		OutputStream outputStream = ftpClient.storeFileStream(filename);
+		logger.debug("XXX store {}", ftpClient.getReplyString());
+		if (outputStream == null) {
+			logger.error("FTP outputStream is empty!!");
 		}
-		return null;
+
+		return outputStream;
 	}
 
-	public static void closeFTPConnection() {
-		try {
-			ftpClient.completePendingCommand();
-			ftpClient.disconnect();
-		} catch (IOException e) {
-			logger.error("Exception occured trying to close ftp connection", e);
-		}
+	public static void closeFTPConnection() throws IOException {
+		ftpClient.completePendingCommand();
+		ftpClient.disconnect();
 	}
 }
