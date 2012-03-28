@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 
-@Path("/traffic")
+@Path("/")
 public class Analyzer {
 
 	/**
@@ -114,6 +114,13 @@ public class Analyzer {
 			logger.error("Exception occured while trying to get state from Bison", e);
 		}
 		return "Err";
+	}
+
+	@GET
+	@Path("/file/{filename}")
+	@Produces("application/json")
+	public String getJSONFile(@PathParam("filename") String filename) {
+		return WebConnector.getFile(filename);
 	}
 
 	@GET

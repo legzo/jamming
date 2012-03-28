@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.cxf.helpers.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -29,6 +30,19 @@ public class WebConnector {
 
 			BufferedImage image = ImageIO.read(response.getEntity().getContent());
 			return image;
+		} catch (IOException e) {
+			logger.error("Error getting image {}", e);
+		}
+		return null;
+	}
+
+	public static String getFile(String filename) {
+		try {
+			HttpClient httpClient = new DefaultHttpClient();
+			HttpGet httpget = new HttpGet("http://tetarot.free.fr/" + filename);
+			HttpResponse response = httpClient.execute(httpget);
+
+			return IOUtils.readStringFromStream(response.getEntity().getContent());
 		} catch (IOException e) {
 			logger.error("Error getting image {}", e);
 		}
