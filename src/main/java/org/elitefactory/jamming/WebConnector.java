@@ -3,10 +3,14 @@ package org.elitefactory.jamming;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 import org.apache.cxf.helpers.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -39,7 +43,7 @@ public class WebConnector {
 	public static String getFile(String filename) {
 		try {
 			HttpClient httpClient = new DefaultHttpClient();
-			HttpGet httpget = new HttpGet("http://tetarot.free.fr/" + filename);
+			HttpGet httpget = new HttpGet("http://tetarot.free.fr/bison/" + filename);
 			HttpResponse response = httpClient.execute(httpget);
 
 			return IOUtils.readStringFromStream(response.getEntity().getContent());
@@ -67,14 +71,10 @@ public class WebConnector {
 	 * @throws IOException
 	 */
 	public static OutputStream getFTPOutputStream(String filename) throws IOException {
-		ftpClient.connect("ftpperso.free.fr");
-		ftpClient.login("tetarot", "kem6mool");
-		logger.debug("XXX connect {}", ftpClient.getReplyString());
-
-		ftpClient.enterLocalPassiveMode();
+		connectToFTP();
 
 		OutputStream outputStream = ftpClient.storeFileStream(filename);
-		logger.debug("XXX store {}", ftpClient.getReplyString());
+		logger.debug("store {}", ftpClient.getReplyString());
 		if (outputStream == null) {
 			logger.error("FTP outputStream is empty!!");
 		}
@@ -82,8 +82,38 @@ public class WebConnector {
 		return outputStream;
 	}
 
+	private static void connectToFTP() throws SocketException, IOException {
+		ftpClient.connect("ftpperso.free.fr");
+		ftpClient.login("tetarot", "kem6mool");
+		logger.debug("connect {}", ftpClient.getReplyString());
+
+		ftpClient.enterLocalPassiveMode();
+
+		ftpClient.changeWorkingDirectory("bison");
+	}
+
 	public static void closeFTPConnection() throws IOException {
 		ftpClient.completePendingCommand();
 		ftpClient.disconnect();
+	}
+
+	public static List<String> getFilesList() {
+		try {
+			List<String> results = new ArrayList<String>();
+
+			connectToFTP();
+			FTPFile[] listOfFiles = ftpClient.listFiles();
+
+			for (FTPFile ftpFile : listOfFiles) {
+				if (ftpFile.isFile()) {
+					results.add(ftpFile.getName());
+				}
+			}
+			ftpClient.disconnect();
+			return results;
+		} catch (IOException e) {
+			logger.error("Error getting image {}", e);
+		}
+		return null;
 	}
 }

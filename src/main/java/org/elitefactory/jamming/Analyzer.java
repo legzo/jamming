@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
@@ -42,6 +43,7 @@ public class Analyzer {
 	 * Getting traffic info every minute (at 0 seconds) from 17h00'00 to 19h59'00
 	 */
 	private static final String GET_OUTER_TRAFFIC_CRON_EXPRESSION = "0 0/1 17,18,19 * * MON-FRI";
+
 	/**
 	 * Uploading @ 20h59'59" every week day
 	 */
@@ -50,8 +52,10 @@ public class Analyzer {
 	/**
 	 * for quick debug
 	 */
-	// private static final String GET_TRAFFIC_CRON_EXPRESSION = "0/5 * * * * MON-FRI";
+	// private static final String GET_OUTER_TRAFFIC_CRON_EXPRESSION = "0/2 * * * * MON-FRI";
 	// private static final String UPLOAD_DATA_CRON_EXPRESSION = "30/30 * * * * MON-FRI";
+
+	private static final boolean enableCrons = true;
 
 	private static final String APPLICATION_URL = "http://freezing-winter-8090.herokuapp.com/rest/traffic/config";
 	private static ObjectMapper mapper = new ObjectMapper();
@@ -96,11 +100,12 @@ public class Analyzer {
 				uploadHistory();
 			}
 		};
-
-		scheduler.schedule(pingTask, new CronTrigger(PING_CRON_EXPRESSION));
-		scheduler.schedule(getInnerTrafficTask, new CronTrigger(GET_INNER_TRAFFIC_CRON_EXPRESSION));
-		scheduler.schedule(getOuterTrafficTask, new CronTrigger(GET_OUTER_TRAFFIC_CRON_EXPRESSION));
-		scheduler.schedule(uploadTask, new CronTrigger(UPLOAD_DATA_CRON_EXPRESSION));
+		if (enableCrons) {
+			scheduler.schedule(pingTask, new CronTrigger(PING_CRON_EXPRESSION));
+			scheduler.schedule(getInnerTrafficTask, new CronTrigger(GET_INNER_TRAFFIC_CRON_EXPRESSION));
+			scheduler.schedule(getOuterTrafficTask, new CronTrigger(GET_OUTER_TRAFFIC_CRON_EXPRESSION));
+			scheduler.schedule(uploadTask, new CronTrigger(UPLOAD_DATA_CRON_EXPRESSION));
+		}
 	}
 
 	@GET
@@ -117,10 +122,23 @@ public class Analyzer {
 	}
 
 	@GET
-	@Path("/file/{filename}")
+	@Path("/files/{filename}")
 	@Produces("application/json")
 	public String getJSONFile(@PathParam("filename") String filename) {
 		return WebConnector.getFile(filename);
+	}
+
+	@GET
+	@Path("/files")
+	@Produces("application/json")
+	public String getFilesList() {
+		List<String> filesList = WebConnector.getFilesList();
+		try {
+			return mapper.writeValueAsString(filesList);
+		} catch (IOException e) {
+			logger.error("Exception occured while trying to get files list", e);
+		}
+		return "Err";
 	}
 
 	@GET

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -42,6 +43,15 @@ public class ImageAnalyzerTest {
 	private BufferedImage getImage() throws IOException {
 		BufferedImage image = ImageIO.read(new File("src/test/resources/bison-color.png"));
 		return image;
+	}
+
+	@Test
+	public void shouldGetListOfFiles() {
+		List<String> filesList = WebConnector.getFilesList();
+		for (String ftpFile : filesList) {
+			System.out.println(ftpFile);
+		}
+
 	}
 
 	// @Test
