@@ -65,8 +65,9 @@ var treatData = function(result) {
 	
 
 	var extremaDates = [];
-	extremaDates.push(dates[0]);
-	extremaDates.push(dates[dates.length-1]);
+	var startDate = dates[0]
+	extremaDates.push(startDate);
+	extremaDates.push(new Date(startDate.getTime() + (3*60*60*1000)));
 	
 	graph(data, extremaDates);
 };

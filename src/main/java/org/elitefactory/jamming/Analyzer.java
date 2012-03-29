@@ -181,7 +181,7 @@ public class Analyzer {
 	private void uploadHistory() {
 		try {
 			OutputStream ftpOutputStream = WebConnector.getFTPOutputStream(String.format(
-					"bison-%1$tm-%1$td-%1$tk_%1$tM_%1$tS.json", new Date()));
+					"bison-%1$tm-%1$td-%1$tH_%1$tM_%1$tS.json", new Date()));
 			mapper.writeValue(ftpOutputStream, history);
 			ftpOutputStream.close();
 			WebConnector.closeFTPConnection();
