@@ -7,9 +7,18 @@ $(document).ready(function() {
 });
 
 var getFilesCallback = function(files) {
-	for ( var key in files) {
+	for (var key in files) {
 		var file = files[key];
-		var $fileLi = $("<li><a href='#'>" + file + "</a></li>");
+		var month = file.substring(6, 8) - 1; 
+		var date = new Date(2012, month, file.substring(9, 11));
+		
+		var partOfDay = "AM";
+		
+		if(file.substring(12, 14) == '19') {
+			partOfDay = "PM";
+		}
+		
+		var $fileLi = $("<li><a href='#'>" + date.toString("dddd d MMMM ") + partOfDay + "</a></li>");
 		
 		$fileLi.attr(
 				{
@@ -62,14 +71,7 @@ var treatData = function(result) {
 		
 		dates.push(new Date(state.time));
 	}
-	
-
-	var extremaDates = [];
-	var startDate = dates[0]
-	extremaDates.push(startDate);
-	extremaDates.push(new Date(startDate.getTime() + (3*60*60*1000)));
-	
-	graph(data, extremaDates);
+	graph(data, d3.extent(dates));
 };
 
 var xhrFile = function(url) {
@@ -88,7 +90,7 @@ var graph = function(data, dates) {
 	$("#evolGraph").empty();
 	
 	var format = d3.time.format("%H:%M");
-	var barHeight = 3;
+	var barHeight = 4;
 
 	var chart = d3
 		.select("#evolGraph").append("svg")
@@ -106,13 +108,11 @@ var graph = function(data, dates) {
 	var y = d3.time.scale()
 		.domain(dates)
 		.range([0, 500]);
-
-	chart.selectAll("rect").data(data)
-		.enter()
-		.append("rect")
-		.attr("y", function(d) {	return y(d.y) })
-		.attr("width", function(d) { return x(d.x) })
-		.attr("height", barHeight);
+	
+	var c = d3.scale.linear()
+    	.domain([0, 1])
+    	.range(["green", "red"])
+    	.interpolate(d3.interpolateHsl);
 
 	chart.selectAll("line")
 		.data(x.ticks(10))
@@ -123,6 +123,14 @@ var graph = function(data, dates) {
 		.attr("y1", 0)
 		.attr("y2", barHeight * data.length)
 		.style("stroke", "#ccc");
+	
+	chart.selectAll("rect").data(data)
+		.enter()
+		.append("rect")
+		.attr("y", function(d) { return y(d.y) })
+		.attr("width", function(d) { return x(d.x) })
+		.attr("height", barHeight)
+		.attr("fill", function(d) { return c(d.x) });
 
 	chart.selectAll(".rule")
 		.data(x.ticks(10))
