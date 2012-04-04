@@ -6,19 +6,23 @@ $(document).ready(function() {
 	});
 });
 
+var dateInputFormat = d3.time.format("bison-%m-%d-%H_%M_%S.json");
+var dateOutputFormat = d3.time.format("%a %d %B ");
+
 var getFilesCallback = function(files) {
 	for (var key in files) {
 		var file = files[key];
-		var month = file.substring(6, 8) - 1; 
-		var date = new Date(2012, month, file.substring(9, 11));
+
+		var date = dateInputFormat.parse(file);
+		date.setFullYear(2012);
 		
 		var partOfDay = "AM";
 		
-		if(file.substring(12, 14) == '19') {
+		if(date.getHours() > 12) {
 			partOfDay = "PM";
 		}
 		
-		var $fileLi = $("<li><a href='#'>" + date.toString("dddd d MMMM ") + partOfDay + "</a></li>");
+		var $fileLi = $("<li><a href='#'>" + dateOutputFormat(date) + partOfDay + "</a></li>");
 		
 		$fileLi.attr(
 				{
@@ -71,7 +75,13 @@ var treatData = function(result) {
 		
 		dates.push(new Date(state.time));
 	}
-	graph(data, d3.extent(dates));
+	
+	var extremaDates = [];
+	var startDate = d3.min(dates);
+	extremaDates.push(startDate);
+	extremaDates.push(new Date(startDate.getTime() + (3*60*60*1000)));
+	
+	graph(data, extremaDates);
 };
 
 var xhrFile = function(url) {
@@ -124,34 +134,35 @@ var graph = function(data, dates) {
 		.attr("y2", barHeight * data.length)
 		.style("stroke", "#ccc");
 	
-	chart.selectAll("rect").data(data)
-		.enter()
-		.append("rect")
-		.attr("y", function(d) { return y(d.y) })
-		.attr("width", function(d) { return x(d.x) })
-		.attr("height", barHeight)
-		.attr("fill", function(d) { return c(d.x) });
-
 	chart.selectAll(".rule")
 		.data(x.ticks(10))
 		.enter()
 		.append("text")
 		.attr("class", "rule")
 		.attr("x", x)
-		.attr("y", 0)
-		.attr("dy", -3)
+		.attr("y", -5)
 		.attr("text-anchor", "middle").text(String);
 	
 	chart.selectAll(".yrule")
-		.data(y.ticks(10))
+		.data(y.ticks(12))
 		.enter()
 		.append("text")
 		.attr("class", "rule")
-		.attr("x", 0)
+		.attr("x", -20)
 		.attr("y", y)
-		.attr("dx", -30)
 		.attr("text-anchor", "middle")
 		.text(function(d, i) 
 				{ return format(d); }
 		);
+	
+	chart.selectAll("rect").data(data)
+		.enter()
+		.append("rect")
+		.attr("y", function(d) { return y(d.y) })
+		.attr("height", barHeight)
+		.attr("fill", function(d) { return c(d.x) })
+		.transition()
+		.duration(300)
+		.attr("width", function(d) { return x(d.x) });
+
 }
