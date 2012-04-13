@@ -49,18 +49,12 @@ public class Analyzer {
 	/**
 	 * Getting traffic info every minute (at 0 seconds) from 17h00'00 to 19h59'00
 	 */
-	private static final String GET_OUTER_TRAFFIC_CRON_EXPRESSION = "0/10 0/1 17,18,19,23 * * MON-FRI";
+	private static final String GET_OUTER_TRAFFIC_CRON_EXPRESSION = "0 0/1 17,18,19 * * MON-FRI";
 
 	/**
 	 * Uploading @ 20h59'59" every week day
 	 */
 	private static final String UPLOAD_DATA_CRON_EXPRESSION = "59 59 9,19 * * MON-FRI";
-
-	/**
-	 * for quick debug
-	 */
-	// private static final String GET_OUTER_TRAFFIC_CRON_EXPRESSION = "0/2 * * * * MON-FRI";
-	// private static final String UPLOAD_DATA_CRON_EXPRESSION = "30/30 * * * * MON-FRI";
 
 	private static final boolean enableCrons = true;
 
@@ -84,14 +78,16 @@ public class Analyzer {
 			@Override
 			public void run() {
 				logger.info("Triggering getOuterTrafficTask");
-				saveCurrentState(RocadeDirection.outer);
+				// saveCurrentState(RocadeDirection.outer);
+				history.putState(getCurrentState(RocadeDirection.outer));
 			}
 		};
 		Runnable getInnerTrafficTask = new Runnable() {
 			@Override
 			public void run() {
 				logger.info("Triggering getInnerTrafficTask");
-				saveCurrentState(RocadeDirection.inner);
+				// saveCurrentState(RocadeDirection.inner);
+				history.putState(getCurrentState(RocadeDirection.inner));
 			}
 		};
 
@@ -114,7 +110,7 @@ public class Analyzer {
 			scheduler.schedule(pingTask, new CronTrigger(PING_CRON_EXPRESSION));
 			scheduler.schedule(getInnerTrafficTask, new CronTrigger(GET_INNER_TRAFFIC_CRON_EXPRESSION));
 			scheduler.schedule(getOuterTrafficTask, new CronTrigger(GET_OUTER_TRAFFIC_CRON_EXPRESSION));
-			// scheduler.schedule(uploadTask, new CronTrigger(UPLOAD_DATA_CRON_EXPRESSION));
+			scheduler.schedule(uploadTask, new CronTrigger(UPLOAD_DATA_CRON_EXPRESSION));
 		}
 	}
 
