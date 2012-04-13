@@ -3,6 +3,8 @@ package org.elitefactory.jamming;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +19,8 @@ import javax.ws.rs.Produces;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectWriter;
 import org.codehaus.jackson.util.DefaultPrettyPrinter;
+import org.elitefactory.jamming.db.State;
+import org.elitefactory.jamming.db.StateDao;
 import org.elitefactory.jamming.model.RocadeDirection;
 import org.elitefactory.jamming.model.RocadePoint;
 import org.elitefactory.jamming.model.TrafficHistory;
@@ -24,10 +28,13 @@ import org.elitefactory.jamming.model.TrafficState;
 import org.elitefactory.jamming.model.TrafficStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
+import org.springframework.stereotype.Component;
 
 @Path("/")
+@Component
 public class Analyzer {
 
 	/**
@@ -42,7 +49,7 @@ public class Analyzer {
 	/**
 	 * Getting traffic info every minute (at 0 seconds) from 17h00'00 to 19h59'00
 	 */
-	private static final String GET_OUTER_TRAFFIC_CRON_EXPRESSION = "0 0/1 17,18,19 * * MON-FRI";
+	private static final String GET_OUTER_TRAFFIC_CRON_EXPRESSION = "0/10 0/1 17,18,19,23 * * MON-FRI";
 
 	/**
 	 * Uploading @ 20h59'59" every week day
@@ -65,6 +72,9 @@ public class Analyzer {
 
 	private ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 
+	@Autowired
+	private StateDao stateDao;
+
 	@PostConstruct
 	public void init() {
 
@@ -74,14 +84,14 @@ public class Analyzer {
 			@Override
 			public void run() {
 				logger.info("Triggering getOuterTrafficTask");
-				history.putState(getCurrentState(RocadeDirection.outer));
+				saveCurrentState(RocadeDirection.outer);
 			}
 		};
 		Runnable getInnerTrafficTask = new Runnable() {
 			@Override
 			public void run() {
 				logger.info("Triggering getInnerTrafficTask");
-				history.putState(getCurrentState(RocadeDirection.inner));
+				saveCurrentState(RocadeDirection.inner);
 			}
 		};
 
@@ -104,8 +114,15 @@ public class Analyzer {
 			scheduler.schedule(pingTask, new CronTrigger(PING_CRON_EXPRESSION));
 			scheduler.schedule(getInnerTrafficTask, new CronTrigger(GET_INNER_TRAFFIC_CRON_EXPRESSION));
 			scheduler.schedule(getOuterTrafficTask, new CronTrigger(GET_OUTER_TRAFFIC_CRON_EXPRESSION));
-			scheduler.schedule(uploadTask, new CronTrigger(UPLOAD_DATA_CRON_EXPRESSION));
+			// scheduler.schedule(uploadTask, new CronTrigger(UPLOAD_DATA_CRON_EXPRESSION));
 		}
+	}
+
+	private void saveCurrentState(RocadeDirection direction) {
+		TrafficState currentState = getCurrentState(direction);
+		State state = new State(currentState);
+
+		stateDao.save(state);
 	}
 
 	@GET
@@ -178,6 +195,39 @@ public class Analyzer {
 		return "Err";
 	}
 
+	@GET
+	@Path("/states/{from}/{to}")
+	@Produces("application/json")
+	public String getStates(@PathParam(value = "from") String from, @PathParam(value = "to") String to) {
+		try {
+
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH_mm");
+
+			Date fromDate = sdf.parse(from);
+			Date toDate = sdf.parse(to);
+			List<State> results = stateDao.find(fromDate, toDate);
+
+			if (results != null && results.size() > 0) {
+				TrafficHistory resultsAsHistory = new TrafficHistory();
+
+				for (State state : results) {
+					resultsAsHistory.putState(state.unmarshall());
+				}
+
+				ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
+				return writer.writeValueAsString(resultsAsHistory);
+			} else {
+				return "History is empty";
+			}
+
+		} catch (IOException e) {
+			logger.error("Exception occured while trying to get state from Bison", e);
+		} catch (ParseException e) {
+			logger.error("Parsing date parameter failed", e);
+		}
+		return "Err";
+	}
+
 	private void uploadHistory() {
 		try {
 			OutputStream ftpOutputStream = WebConnector.getFTPOutputStream(String.format(
@@ -224,5 +274,9 @@ public class Analyzer {
 
 	public TrafficState getCurrentState(RocadeDirection direction) {
 		return getCurrentStateFromImage(WebConnector.getCurrentBisonImage(), direction);
+	}
+
+	public void setStateDao(StateDao stateDao) {
+		this.stateDao = stateDao;
 	}
 }

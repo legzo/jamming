@@ -20,6 +20,8 @@ public class Start {
 
 		server.setHandler(bb);
 
+		System.setProperty("DATABASE_URL", "postgres://johnny:password@hostname/path");
+
 		try {
 			System.out.println(">>> STARTING EMBEDDED JETTY SERVER, PRESS ANY KEY TO STOP");
 			server.start();
