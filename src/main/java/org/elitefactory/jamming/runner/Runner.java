@@ -1,4 +1,4 @@
-package org.elitefactory.jamming;
+package org.elitefactory.jamming.runner;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -8,6 +8,8 @@ import java.util.Date;
 import javax.imageio.ImageIO;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.elitefactory.jamming.Analyzer;
+import org.elitefactory.jamming.WebConnector;
 import org.elitefactory.jamming.model.RocadeDirection;
 import org.elitefactory.jamming.model.TrafficHistory;
 import org.elitefactory.jamming.model.TrafficState;

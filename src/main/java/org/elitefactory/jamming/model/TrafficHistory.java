@@ -69,7 +69,7 @@ public class TrafficHistory {
 	public void setHistorySummaryAsString(String s) {
 	}
 
-	public void setHistoryAsString(String s) {
+	public void setHistoryAsString(Map<Date, String> s) {
 	}
 
 }
