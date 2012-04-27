@@ -1,56 +1,59 @@
-$(document).ready(function() {
-	getFiles();
+var dateInputFormat = d3.time.format("bison-%m-%d-%H_%M_%S.json");
+var calendarFormatAsString = "yyyy-mm-dd";
+var calendarFormat = d3.time.format("%Y-%m-%d");
+var maxTimeFormat = d3.time.format("%A %d %B - max @ %H:%M");
+var barHeight = 4;
+var height = 500;
+var width = 500;
+var cache = {};
 
+$(document).ready(function() {
+	
+	var today = calendarFormat(new Date());
+	
+	var chart = d3
+			.select("#evolGraph").append("svg")
+			.attr("class", "chart")
+			.attr("width", width + 20)
+			.attr("height", height + 20)
+		.append("g")
+			.attr("transform", "translate(45,15)");
+	
+	$('#datepicker-am').val(today);
+	$('#datepicker-pm').val(today);
+	
+	$('#datepicker-am').datepicker({
+		format : calendarFormatAsString
+	}).on('changeDate', dateChosenCallbackAM);
+
+	$('#datepicker-pm').datepicker({
+		format : calendarFormatAsString
+	}).on('changeDate', dateChosenCallbackPM);
+	
+	
 	$('#displayCurrent').click(function() {
 		xhrFile('/rest/traffic/history');
 	});
 });
 
-var dateInputFormat = d3.time.format("bison-%m-%d-%H_%M_%S.json");
-var dateOutputFormat = d3.time.format("%a %d %B ");
+var dateChosenCallbackAM = function(ev) {
+	dateChosenCallback('am', '-09_59_59.json');
+};
+var dateChosenCallbackPM = function(ev) {
+	dateChosenCallback('pm', '-19_59_59.json');
+};
 
-var getFilesCallback = function(files) {
-	for (var key in files) {
-		var file = files[key];
-
-		var date = dateInputFormat.parse(file);
-		date.setFullYear(2012);
-		
-		var partOfDay = "AM";
-		
-		if(date.getHours() > 12) {
-			partOfDay = "PM";
-		}
-		
-		var $fileLi = $("<li><a href='#'>" + dateOutputFormat(date) + partOfDay + "</a></li>");
-		
-		$fileLi.attr(
-				{
-					id: file,
-					rel: file
-				}
-			)
-		
-		$("#files").append($fileLi);
-	}
+var dateChosenCallback = function(id, suffix) {
+	var datePicker = $('#datepicker-' + id);
 	
-	$("#files").delegate("li", "click", function() {
-		var url = '/rest/traffic/files/' + $(this).attr("rel");
-		xhrFile(url);
-	});
-}
+	datePicker.datepicker('hide');
+	datePicker.blur();
 
-var getFiles = function() {
+	var url = '/rest/traffic/files/bison-'
+			+ datePicker.val().substring(5) + suffix;
 
-	$.ajax({
-		url : '/rest/traffic/files',
-		dataType : 'json',
-		success : getFilesCallback,
-		error : function() {
-			alert('error getting files');
-		}
-	});
-}
+	xhrFile(url);
+};
 
 var xhrError = function() {
 	$('#queryStatus').text("no file found");
@@ -58,57 +61,65 @@ var xhrError = function() {
 	$('#summary').text('');
 }
 
-var treatData = function(result) {
-	$('#history').show();
-	$('#queryStatus').text("got file!");
-	$('#summary').text(result.numberOfSamples + ' samples found');
-
-	var data = [];
-	var dates = [];
-	
-	for ( var time in result.states) {
-		var state = result.states[time];
-		data.push({
-				x: state.stateAsFloat,
-				y: new Date(state.time)
-			});
+var getTreatAndCacheDataCallback = function(url) {
+	return function(result) {
+		$('#history').show();
 		
-		dates.push(new Date(state.time));
-	}
-	
-	var extremaDates = [];
-	var startDate = d3.min(dates);
-	extremaDates.push(startDate);
-	extremaDates.push(new Date(startDate.getTime() + (3*60*60*1000)));
-	
-	graph(data, extremaDates);
-};
+		cache[url] = result;
+		
+		var maxTime = maxTimeFormat(new Date(result.max.time));
+		
+		$('#queryStatus').text("got file! " + maxTime);
+		$('#summary').text(result.numberOfSamples + ' samples found');
+
+		var data = [];
+		var dates = [];
+		
+		for ( var time in result.states) {
+			var state = result.states[time];
+			data.push({
+					x: state.stateAsFloat,
+					y: new Date(state.time)
+				});
+			
+			dates.push(new Date(state.time));
+		}
+		
+		var extremaDates = [];
+		var startDate = d3.min(dates);
+		extremaDates.push(startDate);
+		extremaDates.push(new Date(startDate.getTime() + (3*60*60*1000)));
+		
+		graph(data, extremaDates);
+	}; 
+} 
 
 var xhrFile = function(url) {
 	$('#history').hide();
 	$('#queryStatus').text("getting file...");
 
-	$.ajax({
-		url : url,
-		dataType : 'json',
-		success : treatData,
-		error : xhrError
-	});
+	
+	var cachedResult = cache[url];
+	var callback = getTreatAndCacheDataCallback(url);
+	
+	if(cachedResult) {
+		callback(cachedResult);
+	} else {
+		$.ajax({
+			url : url,
+			dataType : 'json',
+			success : callback,
+			error : xhrError
+		});
+	} 
 }
 
 var graph = function(data, dates) {
-	$("#evolGraph").empty();
 	
 	var format = d3.time.format("%H:%M");
-	var barHeight = 4;
 
 	var chart = d3
-		.select("#evolGraph").append("svg")
-			.attr("class", "chart")
-			.attr("width", 500)
-			.attr("height", 500)
-			.append("g")
-			.attr("transform", "translate(45,15)");
+		.select("#evolGraph svg g");
 
 	var x = d3.scale
 		.linear()
@@ -117,7 +128,7 @@ var graph = function(data, dates) {
 	
 	var y = d3.time.scale()
 		.domain(dates)
-		.range([0, 500]);
+		.range([0, height]);
 	
 	var c = d3.scale.linear()
     	.domain([0, 1])
@@ -125,44 +136,64 @@ var graph = function(data, dates) {
     	.interpolate(d3.interpolateHsl);
 
 	chart.selectAll("line")
-		.data(x.ticks(10))
+			.data(x.ticks(10))
 		.enter()
-		.append("line")
-		.attr("x1",	x)
-		.attr("x2", x)
-		.attr("y1", 0)
-		.attr("y2", barHeight * data.length)
-		.style("stroke", "#ccc");
+			.append("line")
+			.attr("x1",	x)
+			.attr("x2", x)
+			.attr("y1", 0)
+			.attr("y2", height)
+			.style("stroke", "#ccc");
 	
 	chart.selectAll(".rule")
-		.data(x.ticks(10))
+			.data(x.ticks(10))
 		.enter()
-		.append("text")
-		.attr("class", "rule")
-		.attr("x", x)
-		.attr("y", -5)
-		.attr("text-anchor", "middle").text(String);
+			.append("text")
+			.attr("class", "rule")
+			.attr("x", x)
+			.attr("y", -5)
+			.attr("text-anchor", "middle").text(String);
 	
-	chart.selectAll(".yrule")
-		.data(y.ticks(12))
-		.enter()
+	var yTicks = chart.selectAll("text.yrule").data(y.ticks(12));
+		
+	yTicks.enter()
 		.append("text")
-		.attr("class", "rule")
+		.attr("class", "rule yrule")
 		.attr("x", -20)
-		.attr("y", y)
 		.attr("text-anchor", "middle")
 		.text(function(d, i) 
 				{ return format(d); }
-		);
+		)
+		.attr("y", y)
+		;
 	
-	chart.selectAll("rect").data(data)
-		.enter()
+	yTicks
+		.transition()
+		.duration(300)
+		.delay(300)
+		.attr("y", y)
+		.text(function(d, i) 
+				{ return format(d); }
+		)
+		;
+	
+	var selection = chart.selectAll("rect").data(data);
+
+	selection.enter()
 		.append("rect")
 		.attr("y", function(d) { return y(d.y) })
 		.attr("height", barHeight)
-		.attr("fill", function(d) { return c(d.x) })
+		.attr("width", 0)
+		;
+	
+	selection
 		.transition()
 		.duration(300)
-		.attr("width", function(d) { return x(d.x) });
+		.delay(300)
+		.attr("y", function(d) { return y(d.y) })
+		.attr("height", barHeight)
+		.attr("fill", function(d) { return c(d.x) })
+		.attr("width", function(d) { return x(d.x) })
+		;	
 
 }
