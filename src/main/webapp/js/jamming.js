@@ -198,5 +198,8 @@ var graph = function(data, dates) {
 		.attr("fill", function(d) { return c(d.x) })
 		.attr("width", function(d) { return x(d.x) })
 		;	
+	
+	selection.exit()
+		.remove();
 
 }
