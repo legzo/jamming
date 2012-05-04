@@ -32,7 +32,9 @@ $(document).ready(function() {
 	
 	
 	$('#displayCurrent').click(function() {
-		xhrFile('/rest/traffic/history');
+		xhrFile('/rest/traffic/history', {
+			noCache : true
+		});
 	});
 });
 
@@ -94,15 +96,16 @@ var getTreatAndCacheDataCallback = function(url) {
 	}; 
 } 
 
-var xhrFile = function(url) {
+var xhrFile = function(url, options) {
 	$('#history').hide();
 	$('#queryStatus').text("getting file...");
-
 	
 	var cachedResult = cache[url];
 	var callback = getTreatAndCacheDataCallback(url);
 	
-	if(cachedResult) {
+	var useCache = !(options && options.noCache);
+	
+	if(cachedResult && useCache) {
 		callback(cachedResult);
 	} else {
 		$.ajax({
