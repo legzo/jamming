@@ -52,7 +52,7 @@ public class Analyzer {
 	private static final String GET_OUTER_TRAFFIC_CRON_EXPRESSION = "0 0/1 17,18,19 * * MON-FRI";
 
 	/**
-	 * Uploading @ 20h59'59" every week day
+	 * Uploading @ 09h59'59" & 20h59'59" every week day
 	 */
 	private static final String UPLOAD_DATA_CRON_EXPRESSION = "59 59 9,19 * * MON-FRI";
 
@@ -112,13 +112,6 @@ public class Analyzer {
 			scheduler.schedule(getOuterTrafficTask, new CronTrigger(GET_OUTER_TRAFFIC_CRON_EXPRESSION));
 			scheduler.schedule(uploadTask, new CronTrigger(UPLOAD_DATA_CRON_EXPRESSION));
 		}
-	}
-
-	private void saveCurrentState(RocadeDirection direction) {
-		TrafficState currentState = getCurrentState(direction);
-		State state = new State(currentState);
-
-		stateDao.save(state);
 	}
 
 	@GET
@@ -225,7 +218,16 @@ public class Analyzer {
 	}
 
 	private void uploadHistory() {
+		uploadHistory(0);
+	}
+
+	private void uploadHistory(int retryNumber) {
 		try {
+			// if it is a retry attempt, wait for 4s before retrying
+			if (retryNumber > 0) {
+				Thread.sleep(4000);
+			}
+
 			OutputStream ftpOutputStream = WebConnector.getFTPOutputStream(String.format(
 					"bison-%1$tm-%1$td-%1$tH_%1$tM_%1$tS.json", new Date()));
 			mapper.writeValue(ftpOutputStream, history);
@@ -233,7 +235,14 @@ public class Analyzer {
 			WebConnector.closeFTPConnection();
 			history.getStates().clear();
 		} catch (IOException e) {
-			logger.error("Exception occured while uploading data", e);
+			if (retryNumber < 4) {
+				logger.warn("Upload has failed, retrying for {} time", retryNumber);
+				uploadHistory(retryNumber + 1);
+			} else {
+				logger.error("Exception occured while uploading data, all retry attempts have failed", e);
+			}
+		} catch (InterruptedException e) {
+			logger.error("Thread wait interrupted", e);
 		}
 	}
 
