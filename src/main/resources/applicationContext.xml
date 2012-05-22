@@ -22,8 +22,8 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
 	<context:annotation-config />
 
 	<bean class="java.net.URI" id="dbUrl">
-		<constructor-arg value="postgres://postgres:loom6mek@localhost/jamming" />
-<!--  		<constructor-arg value="#{ systemEnvironment['DATABASE_URL'] }" />-->
+<!--		<constructor-arg value="postgres://postgres:loom6mek@localhost/jamming" />-->
+  		<constructor-arg value="#{ systemEnvironment['DATABASE_URL'] }" />
 	</bean>
 
 	<bean class="org.apache.commons.dbcp.BasicDataSource"
