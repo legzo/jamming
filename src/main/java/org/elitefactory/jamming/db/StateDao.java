@@ -26,6 +26,11 @@ public class StateDao {
 		return em.createQuery("select state from State state where state.time > :from AND state.time < :to ")
 				.setParameter("from", from, TemporalType.TIMESTAMP).setParameter("to", to, TemporalType.TIMESTAMP)
 				.getResultList();
+	}
 
+	@SuppressWarnings("unchecked")
+	public List<State> find(int dayIndex) {
+		return em.createQuery("select state from State state where state.dayIndex = :dayIndex ")
+				.setParameter("dayIndex", dayIndex).getResultList();
 	}
 }

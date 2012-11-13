@@ -1,6 +1,7 @@
 package org.elitefactory.jamming.db;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -30,6 +31,16 @@ public class State {
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date time;
 
+	private int dayIndex;
+
+	public int getDayIndex() {
+		return dayIndex;
+	}
+
+	public void setDayIndex(int dayIndex) {
+		this.dayIndex = dayIndex;
+	}
+
 	private Float summary;
 
 	@Column(length = 2000)
@@ -41,6 +52,9 @@ public class State {
 	public State(TrafficState trafficState) {
 		this.time = trafficState.getTime();
 		this.summary = trafficState.getStateAsFloat();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(time);
+		this.dayIndex = calendar.get(Calendar.DAY_OF_WEEK);
 
 		try {
 			this.stateAsJSON = mapper.writeValueAsString(trafficState);

@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +23,7 @@ import org.codehaus.jackson.map.ObjectWriter;
 import org.codehaus.jackson.util.DefaultPrettyPrinter;
 import org.elitefactory.jamming.db.State;
 import org.elitefactory.jamming.db.StateDao;
+import org.elitefactory.jamming.db.StateLight;
 import org.elitefactory.jamming.model.RocadeDirection;
 import org.elitefactory.jamming.model.RocadePoint;
 import org.elitefactory.jamming.model.TrafficHistory;
@@ -213,6 +216,42 @@ public class Analyzer {
 			logger.error("Exception occured while trying to get state from Bison", e);
 		} catch (ParseException e) {
 			logger.error("Parsing date parameter failed", e);
+		}
+		return "Err";
+	}
+
+	@GET
+	@Path("/statesForDay/{dayIndex}/{ampm}")
+	@Produces("application/json")
+	public String getStatesForDay(@PathParam(value = "dayIndex") int dayIndex, @PathParam(value = "ampm") String ampm) {
+		try {
+			logger.debug("Getting states from DB for day {}:{}", dayIndex, ampm);
+			List<State> results = stateDao.find(dayIndex);
+			logger.debug("{} states loaded", results.size());
+			if (results != null && results.size() > 0) {
+				List<StateLight> realResults = new ArrayList<StateLight>();
+
+				for (State state : results) {
+
+					Calendar cal = Calendar.getInstance();
+					cal.setTime(state.getTime());
+
+					if ((ampm.equals("AM") && cal.get(Calendar.AM_PM) == Calendar.AM)
+							|| (ampm.equals("PM") && cal.get(Calendar.AM_PM) == Calendar.PM)) {
+						if (state.getSummary() > 0) {
+							realResults.add(new StateLight(state));
+						}
+					}
+				}
+				logger.debug("filtering finished, {} states retained", realResults.size());
+				ObjectWriter writer = mapper.writer();
+				return writer.writeValueAsString(realResults);
+			} else {
+				return "History is empty";
+			}
+
+		} catch (IOException e) {
+			logger.error("Exception occured while trying to get state from Bison", e);
 		}
 		return "Err";
 	}
