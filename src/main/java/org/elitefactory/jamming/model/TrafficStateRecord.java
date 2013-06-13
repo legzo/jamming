@@ -2,29 +2,33 @@ package org.elitefactory.jamming.model;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
+
+import org.apache.commons.lang.StringUtils;
 
 public class TrafficStateRecord {
 
-	private float state;
-	private Date time;
+	private String state;
+	private float stateAsFloat;
+	private String time;
 	private String instant;
 	private String date;
 	private int dayOfWeek = -1;
 
+	private final static SimpleDateFormat iso8601Format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
 	private final static SimpleDateFormat hourFormat = new SimpleDateFormat("HH:mm");
-	private final static SimpleDateFormat dayFormat = new SimpleDateFormat("yyyy-mm-dd");
+	private final static SimpleDateFormat dayFormat = new SimpleDateFormat("yyyy-MM-dd");
 
 	public TrafficStateRecord(final TrafficState state) {
-		this.state = state.getStateAsFloat();
-		time = state.getTime();
+		this.state = StringUtils.leftPad(String.valueOf((int) (state.getStateAsFloat() * 100)), 3, "0");
+		stateAsFloat = state.getStateAsFloat();
+		time = iso8601Format.format(state.getTime());
 
 		final Calendar c = Calendar.getInstance();
 		c.setTime(state.getTime());
 		dayOfWeek = c.get(Calendar.DAY_OF_WEEK);
 
-		instant = hourFormat.format(time);
-		date = dayFormat.format(time);
+		instant = hourFormat.format(state.getTime());
+		date = dayFormat.format(state.getTime());
 	}
 
 	public int getDayOfWeek() {
@@ -35,11 +39,11 @@ public class TrafficStateRecord {
 		this.dayOfWeek = dayOfWeek;
 	}
 
-	public float getState() {
+	public String getState() {
 		return state;
 	}
 
-	public Date getTime() {
+	public String getTime() {
 		return time;
 	}
 
@@ -47,11 +51,11 @@ public class TrafficStateRecord {
 		return instant;
 	}
 
-	public void setState(final float state) {
+	public void setState(final String state) {
 		this.state = state;
 	}
 
-	public void setTime(final Date time) {
+	public void setTime(final String time) {
 		this.time = time;
 	}
 
@@ -65,5 +69,13 @@ public class TrafficStateRecord {
 
 	public void setDate(final String date) {
 		this.date = date;
+	}
+
+	public float getStateAsFloat() {
+		return stateAsFloat;
+	}
+
+	public void setStateAsFloat(final float stateAsFloat) {
+		this.stateAsFloat = stateAsFloat;
 	}
 }

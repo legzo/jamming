@@ -34,11 +34,11 @@ public class ElasticSearchFiller {
 	public static void main(final String[] args) throws Exception {
 
 		logger.debug("starting ES");
-		final Node node = NodeBuilder.nodeBuilder().client(true).node();
+		final Node node = NodeBuilder.nodeBuilder().client(false).node();
 		client = node.client();
 		logger.debug("ES started");
 
-		// inject();
+		inject();
 
 		query();
 
@@ -47,27 +47,36 @@ public class ElasticSearchFiller {
 	}
 
 	protected static void query() throws ParseException {
-		//
-		// getHitsForDay("0");
-		// getHitsForDay("1");
-		// getHitsForDay("2");
-		// getHitsForDay("3");
-		// getHitsForDay("4");
-		// getHitsForDay("5");
-		// getHitsForDay("6");
-		//
-		final StringBuilder sb = new StringBuilder();
 
-		for (int i = 17; i < 20; i++) {
-			for (int j = 0; j < 60; j++) {
-				final String instantAsString = String.format("%02d:%02d", i, j);
-				final double mean = getMeanForInstant("2", instantAsString);
-				final String summary = getStateSummaryAsString(new Float(mean));
-				logger.debug("{} {}", instantAsString, summary);
-				sb.append(summary);
+		getHitsForDay("2");
+		getHitsForDay("3");
+		getHitsForDay("4");
+		getHitsForDay("5");
+		getHitsForDay("6");
+
+		for (int dayIndex = 2; dayIndex <= 6; dayIndex++) {
+
+			float total = 0;
+			int samplesNb = 0;
+
+			final StringBuilder sb = new StringBuilder();
+
+			for (int i = 17; i < 20; i++) {
+				for (int j = 0; j < 60; j++) {
+					samplesNb++;
+					final String instantAsString = String.format("%02d:%02d", i, j);
+					final double mean = getMeanForInstant(String.valueOf(dayIndex), instantAsString);
+
+					if (mean >= 0) {
+						total += mean;
+						final String summary = getStateSummaryAsString(new Float(mean));
+						sb.append(summary);
+					}
+				}
 			}
+			logger.debug("{} - {} : {}",
+					new Object[] { dayIndex, String.valueOf(total / samplesNb).substring(0, 4), sb.toString() });
 		}
-		logger.debug("{}", sb.toString());
 	}
 
 	protected static String getStateSummaryAsString(final float stateAsFloat) {
@@ -76,7 +85,6 @@ public class ElasticSearchFiller {
 		if (stateAsFloat < 0.6f) {
 			result = "O";
 		}
-
 		if (stateAsFloat < 0.4f) {
 			result = "o";
 		}
@@ -108,7 +116,7 @@ public class ElasticSearchFiller {
 				.setQuery(QueryBuilders.boolQuery()
 						.must(QueryBuilders.queryString("\""+instant+"\"").field("instant"))
 						.must(QueryBuilders.termQuery("dayOfWeek",dayIndex)))
-				.addFacet(FacetBuilders.statisticalFacet("stat").field("state"));
+				.addFacet(FacetBuilders.statisticalFacet("stat").field("stateAsFloat"));
 		final SearchResponse response = query
 				.execute()
 				.actionGet();
@@ -132,13 +140,13 @@ public class ElasticSearchFiller {
 
 				for (final TrafficState state : history.getStates().values()) {
 					final TrafficStateRecord stateRecord = new TrafficStateRecord(state);
-					final String recordId = String.valueOf(stateRecord.getTime().getTime());
+					final String recordId = stateRecord.getTime();
 
 					client.prepareIndex("traffic", "states", recordId)
 							.setSource(mapper.writeValueAsString(stateRecord)).execute().actionGet();
 				}
 			} catch (final IOException e) {
-				logger.warn("Could not load file {}", bisonFile.getName());
+				logger.trace("Could not load file {}", bisonFile.getName());
 			}
 		}
 
