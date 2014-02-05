@@ -24,7 +24,7 @@ public class WebConnector {
 	private static final String BISON_URL = "http://diffusion-numerique.info-routiere.gouv.fr/asteccli/servlet/clientleger?format=png&source0=cigt_alienor&source1=cir&raster=bordeaux&ts=1391614540436";
 
 	// private static final String proxyServer = "localhost";
-	private static final String proxyServer = "http://proxy-out-int";
+	private static final String proxyServer = "proxy-out-int";
 	private static final int proxyPort = 3128;
 
 	public static BufferedImage getCurrentBisonImage() {
