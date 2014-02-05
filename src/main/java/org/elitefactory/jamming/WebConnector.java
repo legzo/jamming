@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -22,7 +23,9 @@ public class WebConnector {
 
 	private static final String BISON_URL = "http://diffusion-numerique.info-routiere.gouv.fr/asteccli/servlet/clientleger?format=png&source0=cigt_alienor&source1=cir&raster=bordeaux&ts=1391614540436";
 
-	private static final boolean useProxy = false;
+	// private static final String proxyServer = "localhost";
+	private static final String proxyServer = "http://proxy-out-int";
+	private static final int proxyPort = 3128;
 
 	public static BufferedImage getCurrentBisonImage() {
 		try {
@@ -39,8 +42,8 @@ public class WebConnector {
 
 	public static HttpClient getHTTP() {
 
-		if (useProxy) {
-			HttpHost proxy = new HttpHost("localhost", 3128);
+		if (StringUtils.isNotEmpty(proxyServer)) {
+			HttpHost proxy = new HttpHost(proxyServer, proxyPort);
 			DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(
 					proxy);
 			CloseableHttpClient httpClient = HttpClients.custom()
