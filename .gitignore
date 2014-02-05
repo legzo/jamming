@@ -1,0 +1,12 @@
+# Ignore all dotfiles...
+.*
+# except for .gitignore
+!.gitignore
+
+.settings*
+.classpath*
+.project*
+*.class
+*.jar
+*.war
+target/
