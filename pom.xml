@@ -149,20 +149,23 @@
 				</executions>
 			</plugin>
 		</plugins>
+		
 	</build>
+	<profiles>
+		<profile>
+			<id>openshift</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-war-plugin</artifactId>
+						<configuration>
+							<outputDirectory>webapps</outputDirectory>
+							<warName>ROOT</warName>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 	
-	<profile>
-		<id>openshift</id>
-		<build>
-			<plugins>
-				<plugin>
-					<artifactId>maven-war-plugin</artifactId>
-					<configuration>
-						<outputDirectory>webapps</outputDirectory>
-						<warName>ROOT</warName>
-					</configuration>
-				</plugin>
-			</plugins>
-		</build>
-	</profile>
 </project>
