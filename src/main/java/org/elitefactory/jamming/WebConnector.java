@@ -41,16 +41,22 @@ public class WebConnector {
 	}
 
 	public static HttpClient getHTTP() {
+		return getHTTP(false);
+	}
 
-		if (StringUtils.isNotEmpty(proxyServer)) {
+	public static HttpClient getHTTP(boolean disableProxy) {
+
+		if (!disableProxy && StringUtils.isNotEmpty(proxyServer)) {
 			HttpHost proxy = new HttpHost(proxyServer, proxyPort);
 			DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(
 					proxy);
 			CloseableHttpClient httpClient = HttpClients.custom()
 					.setRoutePlanner(routePlanner).build();
-
+			logger.info("Getting httpclient with proxy {}:{}", proxyServer,
+					proxyPort);
 			return httpClient;
 		} else {
+			logger.info("Getting httpclient with NO proxy");
 			return HttpClientBuilder.create().build();
 		}
 

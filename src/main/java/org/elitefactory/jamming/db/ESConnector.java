@@ -37,7 +37,8 @@ public class ESConnector {
 		try {
 			indexQuery.setEntity(new StringEntity(mapper
 					.writeValueAsString(stateRecord)));
-			HttpResponse response = WebConnector.getHTTP().execute(indexQuery);
+			HttpResponse response = WebConnector.getHTTP(true).execute(
+					indexQuery);
 			logger.info("Response : {}", response);
 		} catch (IOException e) {
 			logger.error("ERR ! ", e);
