@@ -1,23 +1,7 @@
-.chart { 
-	margin-top: 20px;
+#history {
+	margin-top: 10px;
 }
 
-.chart rect {
-	opacity: 0.6;
-}
-
-.chart circle {
-	opacity: 0.1;
-}
-.chart .rule {
-	font-size: 10px;
-	fill: gray;
-}
-
-.row {
-	margin: 10px;
-}
-
-.chartContainer {
-	display: inline-block;
+#history p {
+	font-family: consolas, courrier, monospace;
 }
