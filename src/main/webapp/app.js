@@ -34,14 +34,14 @@ var drawHistory = function(givenDirection) {
   }, function (err) {
       console.trace(err.message);
   });
-}
+};
 
 var drawPeriod = function(label, hits) {
   var history = '';
   for(var index in hits){
     var hit = hits[index]._source;
-    console.log(hit.time)
-    history += getAsString(hit.stateAsFloat)
+    console.log(hit.time + ' : ' + hit.stateAsFloat);
+    history += getAsString(hit.stateAsFloat);
   }
 
   var historyAsText = '<p><b>' + label + ' : </b>' + history + '</p>';
@@ -49,7 +49,7 @@ var drawPeriod = function(label, hits) {
   console.log(historyAsText);
 
   $('#history').append(historyAsText);
-}
+};
 
 var getAsString = function(stateAsFloat) {
   var result = "@";
@@ -67,7 +67,7 @@ var getAsString = function(stateAsFloat) {
     result = "-";
   }
   return result;
-}
+};
 
 $(document).ready(function() {
   drawHistory('inner');
