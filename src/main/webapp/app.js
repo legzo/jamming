@@ -1,3 +1,5 @@
+var format = d3.time.format.iso;
+
 var client = new elasticsearch.Client({
   host: 'data-jte.beta.kermit.orange-labs.fr',
   log: 'info'
@@ -9,7 +11,7 @@ var drawHistory = function(givenDirection) {
   client.search({
       index: 'trafic',
       type: 'state-partial',
-      size: 9999,
+      size: 200,
       sort: 'time:asc',
       body: {
         filter: {
@@ -30,25 +32,59 @@ var drawHistory = function(givenDirection) {
   }).then(function (resp) {
       var hits = resp.hits.hits;
       console.log(hits.length + ' docs fetched');
-      drawPeriod(givenDirection, hits);
+      /*drawPeriod(givenDirection, hits);*/
+      drawGraph(givenDirection, hits);
   }, function (err) {
       console.trace(err.message);
   });
 };
 
+var dateFn = function(d) { return format.parse(d._source.time); };
+
+var amountFn = function(d) { return d._source.stateAsFloat };
+
+var drawGraph = function(label, hits) {
+  
+  var x = d3.time.scale()
+            .range([0, getWidth()])
+            .domain(d3.extent(hits, dateFn));
+
+  var color = d3.scale.linear()
+                .range(["green", "red"])
+                .domain(d3.extent(hits, amountFn));
+
+  var y = d3.scale.linear()
+                .range([getHeight(), 0])
+                .domain(d3.extent(hits, amountFn));
+
+  var svgContainer = 
+    d3.select('#graph-' + label)
+      .append('svg')
+      .attr('id', 'svg-' + label)
+      .attr('width', getWidth())
+      .attr('height', getHeight());
+
+  var bars = 
+    svgContainer.selectAll('rect')
+                .data(hits)
+                .enter()
+                .append('rect')
+                .attr('fill', function(d) { return color(amountFn(d)) })
+                .attr('x', function(d) { return x(dateFn(d)) })
+                .attr('y', function(d) { return y(amountFn(d)) })
+                .attr('height', 120)
+                .attr('width', 2);
+
+}
+
 var drawPeriod = function(label, hits) {
   var history = '';
   for(var index in hits){
     var hit = hits[index]._source;
-    console.log(hit.time + ' : ' + hit.stateAsFloat);
     history += getAsString(hit.stateAsFloat);
   }
-
-  var historyAsText = '<p><b>' + label + ' : </b>' + history + '</p>';
-
-  console.log(historyAsText);
-
-  $('#history').append(historyAsText);
+  console.log(history);
+  $('#history-' + label).append(history);
 };
 
 var getAsString = function(stateAsFloat) {
@@ -68,6 +104,14 @@ var getAsString = function(stateAsFloat) {
   }
   return result;
 };
+
+var getWidth = function() {
+  return $('#graphs').width();
+}
+
+var getHeight = function() {
+  return 40;
+}
 
 $(document).ready(function() {
   drawHistory('inner');
