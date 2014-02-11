@@ -32,7 +32,6 @@ var drawHistory = function(givenDirection, hours) {
   }).then(function (resp) {
       var hits = resp.hits.hits;
       console.log(hits.length + ' docs fetched');
-      /*drawPeriod(givenDirection, hits);*/
       drawGraph(givenDirection, hits);
   }, function (err) {
       console.trace(err.message);
@@ -45,6 +44,8 @@ var amountFn = function(d) { return d._source.stateAsFloat };
 
 var drawGraph = function(label, hits) {
   
+  $('#graph-' + label).empty();
+
   var x = d3.time.scale()
             .range([0, getWidth()])
             .domain(d3.extent(hits, dateFn));
@@ -76,38 +77,10 @@ var drawGraph = function(label, hits) {
                 .attr('x', function(d) { return x(dateFn(d)) })
                 .attr('y', function(d) { return y(amountFn(d)) })
                 .attr('height', 120)
-                .attr('width', getWidth() / hits.length + 1)
+                .attr('width', getBarWidth(hits))
                 .text(function(d) { return amountFn(d) });
 
 }
-
-var drawPeriod = function(label, hits) {
-  var history = '';
-  for(var index in hits){
-    var hit = hits[index]._source;
-    history += getAsString(hit.stateAsFloat);
-  }
-  console.log(history);
-  $('#history-' + label).append(history);
-};
-
-var getAsString = function(stateAsFloat) {
-  var result = "@";
-
-  if (stateAsFloat < 0.6) {
-    result = "O";
-  }
-  if (stateAsFloat < 0.4) {
-    result = "o";
-  }
-  if (stateAsFloat < 0.2) {
-    result = "=";
-  }
-  if (stateAsFloat < 0.1) {
-    result = "-";
-  }
-  return result;
-};
 
 var getWidth = function() {
   return $('#graphs').width();
@@ -117,7 +90,33 @@ var getHeight = function() {
   return 80;
 }
 
+var getBarWidth = function(hits) {
+  var barWidth = getWidth() / hits.length + 1;
+  return barWidth;
+}
+
+var drawGraphsForTimespan = function(hours) {
+  drawHistory('inner', hours);
+  drawHistory('outer', hours);
+}
+
+var updateNav = function(elt) {
+  $('.nav li').removeClass();
+  $('#' + elt.id).addClass('active');
+
+}
+
 $(document).ready(function() {
-  drawHistory('inner', 3);
-  drawHistory('outer', 3);
+  drawGraphsForTimespan(3);
+  
+  $('#show-now').click(function() {
+    drawGraphsForTimespan(3);
+    updateNav(this);
+  });
+
+  $('#show-day').click(function() {
+    drawGraphsForTimespan(24);
+    updateNav(this);
+  });
+
 });

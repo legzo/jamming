@@ -27,9 +27,9 @@
         </div>
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="#">home</a></li>
-            <li><a href="#about">weeks</a></li>
-            <li><a href="#contact">month</a></li>
+            <li id="show-now" class="active" data-toggle="collapse" data-target=".navbar-collapse"><a href="#">3 hours</a></li>
+            <li id="show-day" data-toggle="collapse" data-target=".navbar-collapse"><a href="#">day</a></li>
+            <li id="show-week" data-toggle="collapse" data-target=".navbar-collapse"><a href="#">week</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -37,8 +37,10 @@
 
 	<div class="container">
 		<div id="graphs">
-			<div id="graph-inner"><h4>inner</h4></div>
-			<div id="graph-outer"><h4>outer</h4></div>
+			<h4>inner</h4>
+			<div id="graph-inner"></div>
+			<h4>outer</h4>
+			<div id="graph-outer"></div>
 		</div>
 	</div>
 

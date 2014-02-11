@@ -1,11 +1,3 @@
 body {
   padding-top: 50px;
 }
-
-#history {
-	margin-top: 10px;
-}
-
-#history p {
-	font-family: consolas, courrier, monospace;
-}
