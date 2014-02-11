@@ -5,13 +5,13 @@ var client = new elasticsearch.Client({
   log: 'info'
 });
 
-var drawHistory = function(givenDirection) {
+var drawHistory = function(givenDirection, hours) {
   var now = Date.now() + (1 * 60 * 60 * 1000);
 
   client.search({
       index: 'trafic',
       type: 'state-partial',
-      size: 200,
+      size: hours * 60 * 60,
       sort: 'time:asc',
       body: {
         filter: {
@@ -21,7 +21,7 @@ var drawHistory = function(givenDirection) {
             }, {
               range: {
                 time : {
-                  gte : now - (2 * 60 * 60 * 1000),
+                  gte : now - (hours * 60 * 60 * 1000),
                   lte : now
                 }
               }
@@ -49,13 +49,16 @@ var drawGraph = function(label, hits) {
             .range([0, getWidth()])
             .domain(d3.extent(hits, dateFn));
 
+  // colorbrewer RdYlGr11 http://bl.ocks.org/mbostock/5577023
+  var colsRdYlGr11 = ["#a50026","#d73027","#f46d43","#fdae61","#fee08b","#ffffbf","#d9ef8b","#a6d96a","#66bd63","#1a9850","#006837"];
+
   var color = d3.scale.linear()
-                .range(["green", "red"])
-                .domain(d3.extent(hits, amountFn));
+                .range(colsRdYlGr11.reverse())
+                .domain(d3.range(0,1,0.1));
 
   var y = d3.scale.linear()
                 .range([getHeight(), 0])
-                .domain(d3.extent(hits, amountFn));
+                .domain([0,1]);
 
   var svgContainer = 
     d3.select('#graph-' + label)
@@ -73,7 +76,8 @@ var drawGraph = function(label, hits) {
                 .attr('x', function(d) { return x(dateFn(d)) })
                 .attr('y', function(d) { return y(amountFn(d)) })
                 .attr('height', 120)
-                .attr('width', 2);
+                .attr('width', getWidth() / hits.length + 1)
+                .text(function(d) { return amountFn(d) });
 
 }
 
@@ -110,10 +114,10 @@ var getWidth = function() {
 }
 
 var getHeight = function() {
-  return 40;
+  return 80;
 }
 
 $(document).ready(function() {
-  drawHistory('inner');
-  drawHistory('outer');
+  drawHistory('inner', 3);
+  drawHistory('outer', 3);
 });
