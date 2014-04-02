@@ -6,7 +6,7 @@ var client = new elasticsearch.Client({
 });
 
 var drawHistory = function(givenDirection, hours) {
-  var now = Date.now() + (1 * 60 * 60 * 1000);
+  var now = Date.now() + (2 * 60 * 60 * 1000);
 
   client.search({
       index: 'trafic',
@@ -116,6 +116,11 @@ $(document).ready(function() {
 
   $('#show-day').click(function() {
     drawGraphsForTimespan(24);
+    updateNav(this);
+  });
+
+  $('#show-2days').click(function() {
+    drawGraphsForTimespan(2 * 24);
     updateNav(this);
   });
 
