@@ -32,7 +32,7 @@ public class ESConnector {
 		logger.info("Indexing {}", recordId);
 
 		HttpPut indexQuery = new HttpPut(
-				"http://data-jte.beta.kermit.rd.francetelecom.fr/trafic/state-partial/"
+				"http://data-jte.kermit.rd.francetelecom.fr/trafic/state-partial/"
 						+ recordId);
 		try {
 			indexQuery.setEntity(new StringEntity(mapper
