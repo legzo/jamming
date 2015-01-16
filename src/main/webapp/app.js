@@ -1,7 +1,7 @@
 var format = d3.time.format.iso;
 
 var client = new elasticsearch.Client({
-  host: 'data-jte.beta.kermit.orange-labs.fr',
+  host: 'jamming-data.kermit.orange-labs.fr',
   log: 'info'
 });
 
@@ -123,5 +123,11 @@ $(document).ready(function() {
     drawGraphsForTimespan(2 * 24);
     updateNav(this);
   });
+
+  $('#show-7days').click(function() {
+    drawGraphsForTimespan(7 * 24);
+    updateNav(this);
+  });
+
 
 });
