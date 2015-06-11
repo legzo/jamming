@@ -1,3 +1,26 @@
 body {
   padding-top: 50px;
 }
+
+.line {
+  fill: none;
+  stroke-width: 1.5px;
+  stroke: #ff6600;
+  opacity: .1;
+}
+
+.navbar-header .counters {
+  color: white;
+  font-size: 0.85em;
+  margin-top: 7px;
+}
+
+#loader {
+  display: none;
+  background: url('../loader.gif') no-repeat;
+  position: absolute;
+  top: 22px;
+  left: 190px;
+  width: 20px;
+  height: 20px;
+}

@@ -40,7 +40,7 @@ var drawHistory = function(givenDirection, hours) {
 
 var dateFn = function(d) { return format.parse(d._source.time); };
 
-var amountFn = function(d) { return d._source.stateAsFloat };
+var amountFn = function(d) { return d._source.stateAsFloat; };
 
 var drawGraph = function(label, hits) {
   
@@ -73,38 +73,38 @@ var drawGraph = function(label, hits) {
                 .data(hits)
                 .enter()
                 .append('rect')
-                .attr('fill', function(d) { return color(amountFn(d)) })
-                .attr('x', function(d) { return x(dateFn(d)) })
-                .attr('y', function(d) { return y(amountFn(d)) })
+                .attr('fill', function(d) { return color(amountFn(d));})
+                .attr('x', function(d) { return x(dateFn(d));})
+                .attr('y', function(d) { return y(amountFn(d));})
                 .attr('height', 120)
                 .attr('width', getBarWidth(hits))
-                .text(function(d) { return amountFn(d) });
+                .text(function(d) { return amountFn(d);});
 
-}
+};
 
 var getWidth = function() {
   return $('#graphs').width();
-}
+};
 
 var getHeight = function() {
   return 80;
-}
+};
 
 var getBarWidth = function(hits) {
   var barWidth = getWidth() / hits.length + 1;
   return barWidth;
-}
+};
 
 var drawGraphsForTimespan = function(hours) {
   drawHistory('inner', hours);
   drawHistory('outer', hours);
-}
+};
 
 var updateNav = function(elt) {
   $('.nav li').removeClass();
   $('#' + elt.id).addClass('active');
 
-}
+};
 
 $(document).ready(function() {
   drawGraphsForTimespan(3);
@@ -128,6 +128,5 @@ $(document).ready(function() {
     drawGraphsForTimespan(7 * 24);
     updateNav(this);
   });
-
 
 });
